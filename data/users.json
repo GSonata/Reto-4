@@ -1,0 +1,22 @@
+[
+    {
+        "nombre": "juanperez",
+        "contraseña": "clave123",
+        "rol": "usuario"
+    },
+    {
+        "nombre": "mariagarcia",
+        "contraseña": "pass456",
+        "rol": "usuario"
+    },
+    {
+        "nombre": "carlolopez",
+        "contraseña": "segura789",
+        "rol": "usuario"
+    },
+    {
+        "nombre": "adminmaster",
+        "contraseña": "admin999",
+        "rol": "administrador"
+    }
+]

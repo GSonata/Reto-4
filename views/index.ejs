@@ -1,0 +1,123 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Aplicación Mapa</title>
+
+  <link rel="stylesheet" href="bootstrap.min.css">
+  <link rel="stylesheet" href="leaflet.css">
+  <link rel="stylesheet" href="sweetalert2.min.css">
+  <script src="/javascripts/script.js"></script>
+
+  <style>
+    #map {
+      height: 700px;
+      width: 100%;
+    }
+
+    .dataTables_empty {
+      text-align: center !important;
+      font-weight: bold;
+      color: #666;
+      /* Optional: Adjust color for better visibility */
+    }
+  </style>
+</head>
+
+
+<body>
+
+  <%- include('partials/adminbanner') %>
+
+  <div class="container mt-4">
+
+
+    <!-- MAPA -->
+    <h2 class="text-center">Mapa de Puntos de Interés</h2>
+    <!---LEYENDA PARA EL USO DE LA APLICACION-->
+    <div class="accordion mt-3" id="leyendaAccordion">
+      <div class="accordion-item">
+        <h2 class="accordion-header" id="headingOne">
+          <button class="accordion-button bg-primary text-white" type="button" data-bs-toggle="collapse" data-bs-target="#collapseLeyenda" aria-expanded="true" aria-controls="collapseLeyenda">
+            💬 ¿Ayuda para usar la aplicación?
+          </button>
+        </h2>
+        <div id="collapseLeyenda" class="accordion-collapse collapse" aria-labelledby="headingOne" data-bs-parent="#leyendaAccordion">
+          <div class="accordion-body">
+            <ul class="list-group">
+              <li class="list-group-item">
+                <strong>🗺️ Ver Puntos de Interés:</strong> Explora los marcadores en el mapa. Haz clic en uno para ver detalles.
+              </li>
+              <li class="list-group-item">
+                <strong>➕ Agregar Punto:</strong> Haz clic en cualquier lugar del mapa para agregar un nuevo punto de interés.
+              </li>
+              <li class="list-group-item">
+                <strong>✏️ Editar Punto:</strong> Haz clic en el botón <button id="delete-button" class="btn btn-warning btn-sm">Editar</button> en la tabla inferior para modificar un punto existente.
+              </li>
+              <li class="list-group-item">
+                <strong>🗑️ Eliminar Punto:</strong> Usa el botón <button id="edit-button" class="btn btn-danger btn-sm">Borrar</button> en la tabla inferior para eliminar un punto. Se eliminará del mapa y la tabla.
+              </li>
+              <li class="list-group-item">
+                <strong>💾 Persistencia de Datos:</strong> No se preocupe por recargar la pagina. Los datos permanecerán hasta cerrar el servidor
+              </li>
+              <li class="list-group-item">
+                <strong> 🚶‍♂️ Punto Más cercano :</strong> Mostrar la localización mas cercana a mi posicion (el navegador debe de ser compatible)
+              </li>
+            </ul>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div id="map" class="mt-4"></div>
+
+    <!-- TABLA DE PUNTOS DE INTERÉS -->
+    <h2 class="text-center mt-5">Lista de Puntos de Interés</h2>
+    <div class="mb-3">
+      <label for="filtroCategoria" class="form-label fw-bold">Filtrar por categoría</label>
+      <select id="filtroCategoria" class="form-select">
+        <option value="todos">Mostrar Todos</option>
+        <option value="museo">Museo</option>
+        <option value="parque">Parque Natural</option>
+        <option value="punto de interés">Punto de Interés</option>
+        <option value="restaurante">Restaurante</option>
+      </select>
+    </div>
+
+    <div class="text-center mt-3">
+      <button id="btnCercano" class="btn btn-primary" onClick="encontrarPuntoMasCercano()">📍 Encontrar Punto Más Cercano</button>
+    </div>
+
+    <table id="tablaPuntos" class="table table-striped table-bordered mt-4" style="width:100%">
+      <thead class="table-dark">
+        <tr>
+          <th>ID</th>
+          <th>Ubicación</th>
+          <th>Descripción</th>
+          <th>Tipo de Punto</th>
+          <th>Imagen</th>
+          <th>Coordenadas</th>
+          <th>Acciones</th>
+        </tr>
+      </thead>
+      <tbody>
+      </tbody>
+    </table>
+  </div>
+
+  <%- include('partials/footer')%>
+
+
+  <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+  <script src="bootstrap.min.js"></script>
+  <script src="leaflet.js"></script>
+  <script src="sweetalert2.min.js"></script>
+  <script src="https://cdn.datatables.net/1.11.5/js/jquery.dataTables.min.js"></script>
+  <script src="https://cdn.datatables.net/1.11.5/js/dataTables.bootstrap5.min.js"></script>
+
+
+</body>
+
+</html>

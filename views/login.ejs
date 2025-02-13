@@ -1,0 +1,37 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Iniciar Sesión</title>
+    <link rel="stylesheet" href="bootstrap.min.css">
+</head>
+<body class="bg-light">
+    <div class="container d-flex justify-content-center align-items-center vh-100">
+        <div class="card p-4 shadow-lg" style="width: 100%; max-width: 400px;">
+            <% if (error) { %>
+                <div class="alert alert-danger text-center"><%= error %></div>
+            <% } %>
+
+            <% if (status) { %>
+                <div class="alert alert-danger text-center"><%= status %></div>
+            <% } %>
+              
+            <h3 class="text-center mb-4">🔐 Iniciar Sesión</h3>
+            <form action="/login" method="POST">
+                <div class="mb-3">
+                    <label for="username" class="form-label">Nombre de Usuario</label>
+                    <input type="text" class="form-control" id="username" name="username" required placeholder="Ingrese su usuario">
+                </div>
+                <div class="mb-3">
+                    <label for="password" class="form-label">Contraseña</label>
+                    <input type="password" class="form-control" id="password" name="password" required placeholder="Ingrese su contraseña">
+                </div>
+                <button type="submit" class="btn btn-primary w-100">Ingresar</button>
+            </form>
+
+        </div>
+    </div>
+    <script src="bootstrap.min.js"></script>
+</body>
+</html>
