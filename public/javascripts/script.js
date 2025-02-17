@@ -1,3 +1,6 @@
+const { response } = require("express");
+const { data } = require("jquery");
+
 document.addEventListener("DOMContentLoaded", function () {
 
     //Cargamos los elementos principales al cargar la pagina.
@@ -13,22 +16,18 @@ document.addEventListener("DOMContentLoaded", function () {
         attribution: '&copy; OpenStreetMap contributors'
     }).addTo(map);
 
-    //carga los puntos por defecto de la aplicación
+    let puntosDeInteres = [];
+
     function cargarPuntos() {
-        let puntosGuardados = sessionStorage.getItem('puntosDeInteres');
-        return puntosGuardados ? JSON.parse(puntosGuardados) : [
-            { id: 1, lat: 36.7197, lng: -4.4200, titulo: "Museo Picasso", descripcion: "Museo dedicado a Pablo Picasso.", imagen: "./images/picasso.jpg", tipo: "Museo" },
-            { id: 2, lat: 36.7213, lng: -4.4149, titulo: "Museo de Málaga", descripcion: "Museo de arte y arqueología.", imagen: "./images/museomalaga.jpg", tipo: "Museo" },
-            { id: 3, lat: 36.7190, lng: -4.4158, titulo: "Cine Albéniz", descripcion: "Histórico cine de Málaga.", imagen: "./images/albeniz.jpg", tipo: "Punto de interés" }
-        ];
+        fetch("/cargar")
+            .then(response => response.json()) 
+            .then(data => {
+                puntosDeInteres = data;
+            })
+            .catch(error => console.error("Error cargando los puntos:", error));
     }
-
-    let puntosDeInteres = cargarPuntos();
-
-    //guarda los puntos en el storage
-    function savePoints() {
-        sessionStorage.setItem('puntosDeInteres', JSON.stringify(puntosDeInteres));
-    }
+    
+    puntosDeInteres = cargarPuntos;
 
     let markers = [];
 
@@ -64,8 +63,8 @@ document.addEventListener("DOMContentLoaded", function () {
         const categoriaSeleccionada = this.value.toLowerCase();
         sessionStorage.setItem("filtroCategoria", categoriaSeleccionada);
 
-        agregarMarcadores(); // Cambia los marcadores del mapa
-        filtrarTabla(); // Filtra la tabla
+        agregarMarcadores();
+        filtrarTabla(); 
     });
 
     //eliminar puntos
@@ -79,14 +78,31 @@ document.addEventListener("DOMContentLoaded", function () {
             cancelButtonText: "Cancelar"
         }).then((result) => {
             if (result.isConfirmed) {
-                puntosDeInteres = puntosDeInteres.filter(punto => punto.id !== id);
-                savePoints();
-                agregarMarcadores();
-
-                let table = $('#tablaPuntos').DataTable();
-                table.clear().rows.add(puntosDeInteres).draw();
-
-                Swal.fire("Eliminado", "El punto de interés ha sido eliminado con éxito.", "success");
+                fetch("/eliminar", {
+                    method: "POST", 
+                    headers: {
+                        "Content-Type": "application/json"
+                    },
+                    body: JSON.stringify({ id }) 
+                })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        puntosDeInteres = puntosDeInteres.filter(punto => punto.id !== id);
+                        agregarMarcadores();
+    
+                        let table = $('#tablaPuntos').DataTable();
+                        table.clear().rows.add(puntosDeInteres).draw();
+    
+                        Swal.fire("Eliminado", "El punto de interés ha sido eliminado con éxito.", "success");
+                    } else {
+                        Swal.fire("Error", "No se pudo eliminar el punto de interés.", "error");
+                    }
+                })
+                .catch(error => {
+                    console.error("Error eliminando el punto:", error);
+                    Swal.fire("Error", "Hubo un problema con la eliminación.", "error");
+                });
             }
         });
     };

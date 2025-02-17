@@ -53,6 +53,16 @@ router.post('/logout', function (req, res) {
   return res.render("login", { status: "👋 Sesión Cerrada 👋", error: null });
 });
 
+/* FUNCIONES */
+
+router.get("/cargar", function(req,res){
+  return getLocations();
+})
+
+router.post("/eliminar", function(req,res){
+  removeLocation(id);
+})
+
 
 
 module.exports = router;
