@@ -1,5 +1,8 @@
 document.addEventListener("DOMContentLoaded", function () {
 
+    let markers = [];
+    let puntosDeInteres = [];
+
     const filtroGuardado = sessionStorage.getItem("filtroCategoria") || "todos";
     document.getElementById("filtroCategoria").value = filtroGuardado;
     var tableElement = $('#tablaPuntos');
@@ -11,21 +14,36 @@ document.addEventListener("DOMContentLoaded", function () {
     }).addTo(map);
 
     function cargarPuntos() {
-        let puntosGuardados = sessionStorage.getItem('puntosDeInteres');
-        return puntosGuardados ? JSON.parse(puntosGuardados) : [
-            { id: 1, lat: 36.7197, lng: -4.4200, titulo: "Museo Picasso", descripcion: "Museo dedicado a Pablo Picasso.", imagen: "./images/picasso.jpg", tipo: "Museo" },
-            { id: 2, lat: 36.7213, lng: -4.4149, titulo: "Museo de Málaga", descripcion: "Museo de arte y arqueología.", imagen: "./images/museomalaga.jpg", tipo: "Museo" },
-            { id: 3, lat: 36.7190, lng: -4.4158, titulo: "Cine Albéniz", descripcion: "Histórico cine de Málaga.", imagen: "./images/albeniz.jpg", tipo: "Punto de interés" }
-        ];
+        return fetch("/cargar") // ✅ Return the fetch promise
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error("Error fetching data");
+                }
+                return response.json();
+            })
+            .then(data => {
+                puntosDeInteres = data;
+                console.log("Puntos de interés cargados:", puntosDeInteres);
+                return puntosDeInteres;
+            })
+            .catch(error => {
+                console.error("Error cargando los puntos:", error);
+                throw error;
+            });
     }
 
-    let puntosDeInteres = cargarPuntos();
+    cargarPuntos().then(data => {
+        filtrarTabla();
+        agregarMarcadores();
+    }).catch(error => {
+        console.error("Error initializing data:", error);
+    });
+
 
     function savePoints() {
         sessionStorage.setItem('puntosDeInteres', JSON.stringify(puntosDeInteres));
     }
 
-    let markers = [];
 
     function agregarMarcadores() {
         markers.forEach(marker => map.removeLayer(marker));

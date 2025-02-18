@@ -1,7 +1,33 @@
-const { response } = require("express");
-const { data } = require("jquery");
-
 document.addEventListener("DOMContentLoaded", function () {
+
+    let markers = [];
+    let puntosDeInteres = [];
+
+    function cargarPuntos() {
+        return fetch("/cargar") // ✅ Return the fetch promise
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error("Error fetching data");
+                }
+                return response.json();
+            })
+            .then(data => {
+                puntosDeInteres = data;
+                console.log("Puntos de interés cargados:", puntosDeInteres);
+                return puntosDeInteres;
+            })
+            .catch(error => {
+                console.error("Error cargando los puntos:", error);
+                throw error;
+            });
+    }
+
+    cargarPuntos().then(data => {
+        filtrarTabla();
+        agregarMarcadores();
+    }).catch(error => {
+        console.error("Error initializing data:", error);
+    });
 
     //Cargamos los elementos principales al cargar la pagina.
     const filtroGuardado = sessionStorage.getItem("filtroCategoria") || "todos";
@@ -16,21 +42,6 @@ document.addEventListener("DOMContentLoaded", function () {
         attribution: '&copy; OpenStreetMap contributors'
     }).addTo(map);
 
-    let puntosDeInteres = [];
-
-    function cargarPuntos() {
-        fetch("/cargar")
-            .then(response => response.json()) 
-            .then(data => {
-                puntosDeInteres = data;
-            })
-            .catch(error => console.error("Error cargando los puntos:", error));
-    }
-    
-    puntosDeInteres = cargarPuntos;
-
-    let markers = [];
-
     //muestra los puntos en el mapa
     function agregarMarcadores() {
         markers.forEach(marker => map.removeLayer(marker));
@@ -38,6 +49,7 @@ document.addEventListener("DOMContentLoaded", function () {
 
         const categoriaSeleccionada = sessionStorage.getItem('filtroCategoria') || "todos";
 
+        console.log("Dentro de agregarMarcadores: " + puntosDeInteres);
         puntosDeInteres.forEach(punto => {
             if (categoriaSeleccionada === "todos" || punto.tipo.toLowerCase() === categoriaSeleccionada.toLowerCase()) {
                 let marker = L.marker([punto.lat, punto.lng])
@@ -64,7 +76,7 @@ document.addEventListener("DOMContentLoaded", function () {
         sessionStorage.setItem("filtroCategoria", categoriaSeleccionada);
 
         agregarMarcadores();
-        filtrarTabla(); 
+        filtrarTabla();
     });
 
     //eliminar puntos
@@ -79,41 +91,41 @@ document.addEventListener("DOMContentLoaded", function () {
         }).then((result) => {
             if (result.isConfirmed) {
                 fetch("/eliminar", {
-                    method: "POST", 
+                    method: "POST",
                     headers: {
                         "Content-Type": "application/json"
                     },
-                    body: JSON.stringify({ id }) 
+                    body: JSON.stringify({ id })
                 })
-                .then(response => response.json())
-                .then(data => {
-                    if (data.success) {
-                        puntosDeInteres = puntosDeInteres.filter(punto => punto.id !== id);
-                        agregarMarcadores();
-    
-                        let table = $('#tablaPuntos').DataTable();
-                        table.clear().rows.add(puntosDeInteres).draw();
-    
-                        Swal.fire("Eliminado", "El punto de interés ha sido eliminado con éxito.", "success");
-                    } else {
-                        Swal.fire("Error", "No se pudo eliminar el punto de interés.", "error");
-                    }
-                })
-                .catch(error => {
-                    console.error("Error eliminando el punto:", error);
-                    Swal.fire("Error", "Hubo un problema con la eliminación.", "error");
-                });
+                    .then(response => response.json())
+                    .then(data => {
+                        if (data.success) {
+                            // ✅ Reload the points from the server
+                            cargarPuntos().then(() => {
+                                agregarMarcadores(); // ✅ Refresh markers on the map
+                                filtrarTabla(); // ✅ Refresh DataTable
+                            });
+
+                            Swal.fire("Eliminado", "El punto de interés ha sido eliminado con éxito.", "success");
+                        } else {
+                            Swal.fire("Error", "No se pudo eliminar el punto de interés.", "error");
+                        }
+                    })
+                    .catch(error => {
+                        console.error("Error eliminando el punto:", error);
+                        Swal.fire("Error", "Hubo un problema con la eliminación.", "error");
+                    });
             }
         });
     };
 
     //editar un punto
     window.editarPunto = function (id) {
-        let punto = puntosDeInteres.find(p => p.id === id);
+        let punto = puntosDeInteres.find((p) => p.id === id);
         if (!punto) return;
-
+    
         Swal.fire({
-            title: 'Editar Punto de Interés',
+            title: "Editar Punto de Interés",
             html: `
             <div class="container">
                 <div class="row">
@@ -148,67 +160,99 @@ document.addEventListener("DOMContentLoaded", function () {
                     </div>
                 </div>
             </div>
-        `,
+            `,
             showCancelButton: true,
-            confirmButtonText: 'Guardar Cambios',
+            confirmButtonText: "Guardar Cambios",
             preConfirm: () => {
                 return new Promise((resolve, reject) => {
                     const fileInput = document.getElementById("editImagen");
                     const formData = new FormData();
-
+    
                     if (fileInput.files.length > 0) {
                         formData.append("image", fileInput.files[0]);
-
+    
                         fetch("/upload", {
                             method: "POST",
-                            body: formData
+                            body: formData,
                         })
-                            .then(response => response.json())
-                            .then(data => {
+                            .then((response) => response.json())
+                            .then((data) => {
+                                if (!data.imageUrl) throw new Error("Image upload failed");
+    
                                 resolve({
-                                    titulo: document.getElementById('editNombre').value,
-                                    descripcion: document.getElementById('editDescripcion').value,
-                                    lat: parseFloat(document.getElementById('editLat').value),
-                                    lng: parseFloat(document.getElementById('editLng').value),
-                                    tipo: document.getElementById('editTipo').value,
-                                    imagen: data.imageUrl
+                                    id: id,
+                                    titulo: document.getElementById("editNombre").value,
+                                    descripcion: document.getElementById("editDescripcion").value,
+                                    lat: parseFloat(document.getElementById("editLat").value),
+                                    lng: parseFloat(document.getElementById("editLng").value),
+                                    tipo: document.getElementById("editTipo").value,
+                                    imagen: data.imageUrl,
                                 });
                             })
-                            .catch(error => {
+                            .catch((error) => {
                                 console.error("Error uploading image:", error);
-                                reject("Error uploading image");
+                                Swal.showValidationMessage("Error uploading image. Please try again.");
+                                reject();
                             });
                     } else {
                         resolve({
-                            titulo: document.getElementById('editNombre').value,
-                            descripcion: document.getElementById('editDescripcion').value,
-                            lat: parseFloat(document.getElementById('editLat').value),
-                            lng: parseFloat(document.getElementById('editLng').value),
-                            tipo: document.getElementById('editTipo').value,
-                            imagen: punto.imagen
+                            id: id,
+                            titulo: document.getElementById("editNombre").value,
+                            descripcion: document.getElementById("editDescripcion").value,
+                            lat: parseFloat(document.getElementById("editLat").value),
+                            lng: parseFloat(document.getElementById("editLng").value),
+                            tipo: document.getElementById("editTipo").value,
+                            imagen: punto.imagen,
                         });
                     }
                 });
-            }
+            },
         }).then((result) => {
-            if (result.isConfirmed) {
-                Object.assign(punto, result.value);
-                savePoints();
-
-                map.eachLayer(layer => {
-                    if (layer instanceof L.Marker) {
-                        map.removeLayer(layer);
-                    }
-                });
-                agregarMarcadores();
-
-                let table = $('#tablaPuntos').DataTable();
-                table.clear().rows.add(puntosDeInteres).draw();
-
-                Swal.fire('Guardado', 'El punto ha sido actualizado.', 'success');
+            if (result.isConfirmed && result.value) {
+                fetch("/edit", {
+                    method: "POST",
+                    headers: {
+                        "Content-Type": "application/json",
+                    },
+                    body: JSON.stringify(result.value),
+                })
+                    .then((res) => res.json())
+                    .then((data) => {
+                        if (data.success) {
+                            Object.assign(punto, result.value);
+    
+                            // Update UI dynamically
+                            map.eachLayer((layer) => {
+                                if (layer instanceof L.Marker) {
+                                    map.removeLayer(layer);
+                                }
+                            });
+    
+                            let table = $("#tablaPuntos").DataTable();
+                            table.clear().rows.add(puntosDeInteres).draw();
+    
+                            Swal.fire("Guardado", "El punto ha sido actualizado.", "success");
+    
+                            cargarPuntos().then(() => {
+                                agregarMarcadores(); 
+                                filtrarTabla();
+                            });
+    
+                        } else {
+                            Swal.fire("Error", "No se pudo actualizar el punto.", "error");
+                        }
+                    })
+                    .catch((error) => {
+                        console.error("Error updating location:", error);
+                        Swal.fire("Error", "Error en la actualización.", "error");
+                    });
+            } else {
+                console.warn("❌ Edición cancelada o datos inválidos.");
             }
         });
-    }
+    };
+    
+
 
 
     // AGREGAR NUEVO PUNTO DE INTERÉS
@@ -259,6 +303,8 @@ document.addEventListener("DOMContentLoaded", function () {
                                     titulo: document.getElementById('nombreLugar').value,
                                     descripcion: document.getElementById('descripcionLugar').value,
                                     tipo: document.getElementById('tipoLugar').value,
+                                    lat: e.latlng.lat,
+                                    lng: e.latlng.lng,
                                     imagen: data.imageUrl,
                                 });
                             })
@@ -271,6 +317,8 @@ document.addEventListener("DOMContentLoaded", function () {
                             titulo: document.getElementById('nombreLugar').value,
                             descripcion: document.getElementById('descripcionLugar').value,
                             tipo: document.getElementById('tipoLugar').value,
+                            lat: e.latlng.lat,
+                            lng: e.latlng.lng,
                             imagen: "./images/default.jpg"
                         });
                     }
@@ -278,41 +326,34 @@ document.addEventListener("DOMContentLoaded", function () {
             }
         }).then((result) => {
             if (result.isConfirmed) {
-                let nuevoPunto = {
-                    id: puntosDeInteres.length + 1,
-                    lat: e.latlng.lat,
-                    lng: e.latlng.lng,
-                    ...result.value
-                };
-                puntosDeInteres.push(nuevoPunto);
-                savePoints();
-
-                // Agregar marcador al mapa
-                L.marker([nuevoPunto.lat, nuevoPunto.lng])
-                    .addTo(map)
-                    .bindPopup(`
-                    <div class="card text-center p-2" style="width: 12rem;">
-                        <img src="${nuevoPunto.imagen}" class="card-img-top img-thumbnail" alt="${nuevoPunto.titulo}">
-                        <div class="card-body">
-                            <h6 class="card-title text-primary">${nuevoPunto.titulo}</h6>
-                            <p class="card-text text-muted" style="font-size: 0.85rem;">${nuevoPunto.descripcion}</p>
-                            <span class="badge bg-info text-dark">${nuevoPunto.tipo}</span>
-                        </div>
-                    </div>
-                `);
-
-                // Actualizar DataTable
-                let table = $('#tablaPuntos').DataTable();
-                table.clear().rows.add(puntosDeInteres).draw();
-
-                agregarMarcadores();
-                filtrarTabla();
-
-
+                fetch("/add", {
+                    method: "POST",
+                    headers: {
+                        "Content-Type": "application/json"
+                    },
+                    body: JSON.stringify(result.value)
+                })
+                    .then(response => response.json())
+                    .then(data => {
+                        if (data.success) {
+                            Swal.fire("Éxito", "Punto de interés agregado correctamente", "success");
+                            cargarPuntos().then(data => {
+                                filtrarTabla();
+                                agregarMarcadores();
+                            }).catch(error => {
+                                console.error("Error initializing data:", error);
+                            });
+                        } else {
+                            Swal.fire("Error", "No se pudo agregar el punto de interés", "error");
+                        }
+                    })
+                    .catch(error => {
+                        console.error("Error adding location:", error);
+                        Swal.fire("Error", "Error al comunicarse con el servidor", "error");
+                    });
             }
         });
     });
-
 
     if (!$.fn.DataTable.isDataTable(tableElement)) {
         tableElement.DataTable({
@@ -326,7 +367,7 @@ document.addEventListener("DOMContentLoaded", function () {
             "language": {
                 "search": "",
                 "searchPlaceholder": "🔎 Buscar",
-                "emptyTable": "hay resultados"
+                "emptyTable": "No hay resultados"
             },
             "data": puntosDeInteres,
             "columns": [
@@ -453,9 +494,5 @@ document.addEventListener("DOMContentLoaded", function () {
             showConfirmButton: false // Hide confirm button
         });
     }
-
-    //Realizamos estas funciones en el momento en el que carga la pagina
-    agregarMarcadores();
-    filtrarTabla();
 
 });
