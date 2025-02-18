@@ -1,0 +1,29 @@
+[
+    {
+        "id": 1,
+        "lat": 36.7197,
+        "lng": -4.4200,
+        "titulo": "Museo Picasso",
+        "descripcion": "Museo dedicado a Pablo Picasso.",
+        "imagen": "./images/picasso.jpg",
+        "tipo": "Museo"
+    },
+    {
+        "id": 2,
+        "lat": 36.7213,
+        "lng": -4.4149,
+        "titulo": "Museo de Málaga",
+        "descripcion": "Museo de arte y arqueología.",
+        "imagen": "./images/museomalaga.jpg",
+        "tipo": "Museo"
+    },
+    {
+        "id": 3,
+        "lat": 36.7190,
+        "lng": -4.4158,
+        "titulo": "Cine Albéniz",
+        "descripcion": "Histórico cine de Málaga.",
+        "imagen": "./images/albeniz.jpg",
+        "tipo": "Punto de interés"
+    }
+]

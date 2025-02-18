@@ -2,6 +2,7 @@ var express = require('express');
 var router = express.Router();
 var funciones = require("../data/data_provider.js");
 
+
 /* GET Login Page */
 router.get('/', function (req, res, next) {
   if (req.session.login) {
@@ -53,6 +54,63 @@ router.post('/logout', function (req, res) {
   return res.render("login", { status: "👋 Sesión Cerrada 👋", error: null });
 });
 
+/* FUNCIONES */
+
+router.get("/cargar", (req, res) => {
+  const locations = funciones.getLocations();
+  res.json(locations);
+});
+
+router.post("/eliminar", function(req, res) {
+  let { id } = req.body;
+
+  if (!id) {
+      return res.status(400).json({ success: false, message: "❌ ID requerido" });
+  }
+
+  id = Number(id);
+
+  try {
+      const locations = funciones.getLocations();
+      const index = locations.findIndex(loc => loc.id === id);
+
+      if (index === -1) {
+          return res.status(404).json({ success: false, message: "❌ Punto de interés no encontrado" });
+      }
+
+      funciones.removeLocation(id);
+      return res.json({ success: true, message: `✅ Punto con ID ${id} eliminado.` });
+  } catch (error) {
+      console.error("❌ Error eliminando el punto:", error);
+      return res.status(500).json({ success: false, message: "❌ Error en el servidor." });
+  }
+});
+
+router.post("/add", function (req, res) {
+  const newLocation = req.body;
+  if (!newLocation.titulo || !newLocation.lat || !newLocation.lng) {
+      return res.status(400).json({ success: false, message: "Datos incompletos" });
+  }
+
+  funciones.addLocation(newLocation);
+  res.json({ success: true });
+});
+
+router.post("/edit", (req, res) => {
+  const { id, ...updatedData } = req.body;
+
+  if (!id) {
+      return res.status(400).json({ success: false, error: "ID is required" });
+  }
+
+  const result = funciones.editLocation(Number(id), updatedData);
+
+  if (result.success) {
+      res.json({ success: true, message: "Location updated successfully", location: result.location });
+  } else {
+      res.status(404).json({ success: false, error: result.error });
+  }
+});
 
 
 module.exports = router;
