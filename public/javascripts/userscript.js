@@ -14,7 +14,7 @@ document.addEventListener("DOMContentLoaded", function () {
     }).addTo(map);
 
     function cargarPuntos() {
-        return fetch("/cargar") // ✅ Return the fetch promise
+        return fetch("/cargar") 
             .then(response => {
                 if (!response.ok) {
                     throw new Error("Error fetching data");
@@ -38,12 +38,6 @@ document.addEventListener("DOMContentLoaded", function () {
     }).catch(error => {
         console.error("Error initializing data:", error);
     });
-
-
-    function savePoints() {
-        sessionStorage.setItem('puntosDeInteres', JSON.stringify(puntosDeInteres));
-    }
-
 
     function agregarMarcadores() {
         markers.forEach(marker => map.removeLayer(marker));
@@ -211,9 +205,4 @@ document.addEventListener("DOMContentLoaded", function () {
             showConfirmButton: false // Hide confirm button
         });
     }
-
-    //Realizamos estas funciones en el momento en el que carga la pagina
-    agregarMarcadores();
-    filtrarTabla();
-
 });

@@ -4,7 +4,7 @@ document.addEventListener("DOMContentLoaded", function () {
     let puntosDeInteres = [];
 
     function cargarPuntos() {
-        return fetch("/cargar") // ✅ Return the fetch promise
+        return fetch("/cargar")
             .then(response => {
                 if (!response.ok) {
                     throw new Error("Error fetching data");
@@ -100,10 +100,9 @@ document.addEventListener("DOMContentLoaded", function () {
                     .then(response => response.json())
                     .then(data => {
                         if (data.success) {
-                            // ✅ Reload the points from the server
                             cargarPuntos().then(() => {
-                                agregarMarcadores(); // ✅ Refresh markers on the map
-                                filtrarTabla(); // ✅ Refresh DataTable
+                                agregarMarcadores();
+                                filtrarTabla();
                             });
 
                             Swal.fire("Eliminado", "El punto de interés ha sido eliminado con éxito.", "success");
@@ -221,7 +220,6 @@ document.addEventListener("DOMContentLoaded", function () {
                         if (data.success) {
                             Object.assign(punto, result.value);
     
-                            // Update UI dynamically
                             map.eachLayer((layer) => {
                                 if (layer instanceof L.Marker) {
                                     map.removeLayer(layer);
@@ -252,9 +250,6 @@ document.addEventListener("DOMContentLoaded", function () {
         });
     };
     
-
-
-
     // AGREGAR NUEVO PUNTO DE INTERÉS
     map.on('click', function (e) {
         Swal.fire({
@@ -487,11 +482,11 @@ document.addEventListener("DOMContentLoaded", function () {
         Swal.fire({
             title: titulo,
             imageUrl: src,
-            imageWidth: 500,  // Enlarged width
-            imageHeight: 400, // Enlarged height
+            imageWidth: 500, 
+            imageHeight: 400, 
             imageAlt: titulo,
             showCloseButton: true,
-            showConfirmButton: false // Hide confirm button
+            showConfirmButton: false
         });
     }
 

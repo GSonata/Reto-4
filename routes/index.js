@@ -75,21 +75,21 @@ router.post("/eliminar", function(req, res) {
       const index = locations.findIndex(loc => loc.id === id);
 
       if (index === -1) {
-          return res.status(404).json({ success: false, message: "❌ Punto de interés no encontrado" });
+          return res.status(404).json({ success: false});
       }
 
       funciones.removeLocation(id);
-      return res.json({ success: true, message: `✅ Punto con ID ${id} eliminado.` });
+      return res.json({ success: true });
   } catch (error) {
       console.error("❌ Error eliminando el punto:", error);
-      return res.status(500).json({ success: false, message: "❌ Error en el servidor." });
+      return res.status(500).json({ success: false });
   }
 });
 
 router.post("/add", function (req, res) {
   const newLocation = req.body;
   if (!newLocation.titulo || !newLocation.lat || !newLocation.lng) {
-      return res.status(400).json({ success: false, message: "Datos incompletos" });
+      return res.status(400).json({ success: false });
   }
 
   funciones.addLocation(newLocation);
